@@ -159,10 +159,11 @@ def xDXYN(state, opcode):
 
 def xE(state, opcode):
     if opcode[2:] == 0x9E: # 0xEX9E Skip the following instruction if the key corresponding to the hex value stored in VX is pressed.
-        state.pc = (state.pc + 2 * state.keypad[opcode.X]) % 0x1000
+        if state.keypad[state.register[opcode.X]]:
+            state.pc = (state.pc + 2) % 0x1000 
     else:                  # 0xEXA1 Skip the following instruction if the key corresponding to the hex value stored in VX is not pressed.
-        state.pc = (state.pc + 2 * (not state.keypad[opcode.X])) % 0x1000
-
+        if not state.keypad[state.register[opcode.X]]:
+            state.pc = (state.pc + 2) % 0x1000
 
 def xFX07(state, opcode):  # 0xFX07 Store the current value of the delay timer in register VX
     state.register[opcode.X] = state.delay

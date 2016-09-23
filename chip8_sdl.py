@@ -13,22 +13,22 @@ WINDOW_SCALE=16
 BLACK = sdl2.ext.Color(0, 0, 0)
 WHITE = sdl2.ext.Color(255, 255, 255)
 PALETTE = (BLACK, WHITE)
-KEYS = (sdl2.SDLK_KP_0,
-        sdl2.SDLK_KP_1,
-        sdl2.SDLK_KP_2,
-        sdl2.SDLK_KP_3,
-        sdl2.SDLK_KP_4,
-        sdl2.SDLK_KP_5,
-        sdl2.SDLK_KP_6,
-        sdl2.SDLK_KP_7,
-        sdl2.SDLK_KP_8,
-        sdl2.SDLK_KP_9,
-        sdl2.SDLK_a,
-        sdl2.SDLK_b,
-        sdl2.SDLK_c,
-        sdl2.SDLK_d,
-        sdl2.SDLK_e,
-        sdl2.SDLK_f)
+KEYS = (sdl2.SDLK_KP_0, # 0
+        sdl2.SDLK_KP_7, # 1
+        sdl2.SDLK_KP_8, # 2
+        sdl2.SDLK_KP_9, # 3
+        sdl2.SDLK_KP_4, # 4
+        sdl2.SDLK_KP_5, # 5 
+        sdl2.SDLK_KP_6, # 6
+        sdl2.SDLK_KP_1, # 7
+        sdl2.SDLK_KP_2, # 8
+        sdl2.SDLK_KP_3, # 9
+        sdl2.SDLK_a,    # A
+        sdl2.SDLK_b,    # B
+        sdl2.SDLK_c,    # C
+        sdl2.SDLK_d,    # D
+        sdl2.SDLK_e,    # E
+        sdl2.SDLK_f)    # F
 
 
 def screen_to_texture(state, factory):
@@ -67,12 +67,10 @@ def chip8(program):
                 key = event.key.keysym.sym
                 if key in KEYS:
                     state.keypad[KEYS.index(key)] = 1
-                    print('Key Down: {:X}'.format(KEYS.index(key)))
             elif event.type == sdl2.SDL_KEYUP:
                 key = event.key.keysym.sym
                 if key in KEYS:
                     state.keypad[KEYS.index(key)] = 0
-                    print('Key Up: {:X}'.format(KEYS.index(key)))
 
 
         chip8_core.execute_opcode(state, chip8_core.read_opcode(state))
