@@ -6,9 +6,6 @@ import sdl2.ext
 
 import opcodes
 
-SCREEN_X = 64
-SCREEN_Y = 32
-
 class State():
     def __init__(self, program):
         self.program = program
@@ -36,6 +33,9 @@ class State():
                      0xF0, 0x80, 0xF0, 0x80, 0xF0, # E
                      0xF0, 0x80, 0xF0, 0x80, 0x80) # F
 
+        self.SCREEN_WIDTH = 64
+        self.SCREEN_HEIGHT = 32
+
         self.init_memory()
         self.init_screen()
 
@@ -53,7 +53,10 @@ class State():
 
 
     def init_screen(self):
-        self.screen = [[0x00]*SCREEN_Y for x in range(SCREEN_X)]
+         # The screen is represented by a list where screen[0:SCREEN_WIDTH] is the top row,
+         # screen[SCREEN_WIDTH:SCREEN_WIDTH*2] is the second row, screen[SCREEN_WIDTH*2:SCREEN_WIDTH*3]
+         # is the third, and so on.
+        self.screen = [0x00]*self.SCREEN_HEIGHT*self.SCREEN_WIDTH
 
 
 class Opcode(int):
