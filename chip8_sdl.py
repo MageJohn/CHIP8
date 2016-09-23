@@ -31,17 +31,21 @@ KEYS = (sdl2.SDLK_KP_0,
         sdl2.SDLK_f)
 
 
-def draw_surface(surface, state):
-    for x in range(state.SCREEN_WIDTH):
-        for y in range(state.SCREEN_HEIGHT):
-            sdl2.ext.fill(surface, PALETTE[screen[x][y]], area=(x*WINDOW_SCALE, y*WINDOW_SCALE, (x+1)*WINDOW_SCALE, (y+1)*WINDOW_SCALE))
+def screen_to_texture(state, factory):
+    im_screen = Image.new('1', (state.SCREEN_WIDTH, state.SCREEN_HEIGHT))
+    im_screen.putdata([p * 255 for p in state.screen])
+    bytesio_screen = io.BytesIO()
+    im_screen.save(bytesio_screen, format='BMP')
+    bytesio_screen.seek(0)
+
+    return factory.from_object(bytesio_screen)
 
 
 def chip8(program):
     state = chip8_core.State(program)
 
     sdl2.ext.init()
-    window = sdl2.ext.Window("CHIP-8", size=(state.SCREEN_WIDTH*WINDOW_SCALE, state.SCREEN_HEIGHT*WINDOW_SCALE))
+    window = sdl2.ext.Window("CHIP-8", size=(state.SCREEN_WIDTH*WINDOW_SCALE, state.SCREEN_HEIGHT*WINDOW_SCALE), flags=sdl2.SDL_WINDOW_RESIZABLE)
     window.show()
 
     renderer = sdl2.ext.Renderer(window, logical_size=(state.SCREEN_WIDTH, state.SCREEN_HEIGHT))
@@ -51,6 +55,8 @@ def chip8(program):
     running = True
 
     while running:
+        t = time.perf_counter()
+
         events = sdl2.ext.get_events()
         for event in events:
             if event.type == sdl2.SDL_QUIT:
@@ -70,13 +76,8 @@ def chip8(program):
 
         chip8_core.execute_opcode(state, chip8_core.read_opcode(state))
 
-        im_screen = Image.new('1', (state.SCREEN_WIDTH, state.SCREEN_HEIGHT))
-        im_screen.putdata([p * 255 for p in state.screen])
-        bytesio_screen = io.BytesIO()
-        im_screen.save(bytesio_screen, format='BMP')
-        bytesio_screen.seek(0)
-        texture_screen = sprite_factory.from_object(bytesio_screen)
-        texture_renderer.render(texture_screen, x=0, y=0)
+        texture = screen_to_texture(state, sprite_factory)
+        texture_renderer.render(texture, x=0, y=0)
 
 
         if state.delay > 0:
@@ -84,6 +85,9 @@ def chip8(program):
         if state.sound > 0:
             state.sound -= 1
             # TODO Emit sound while this timer > 0
+
+        t2 = time.perf_counter()
+        time.sleep(max(1/60 - (t2 - t), 0))
 
 
 if __name__ == '__main__':
