@@ -31,22 +31,22 @@ KEYS = (sdl2.SDLK_KP_0,
         sdl2.SDLK_f)
 
 
-def draw_surface(surface, screen):
-    for x in range(chip8_core.SCREEN_X):
-        for y in range(chip8_core.SCREEN_Y):
+def draw_surface(surface, state):
+    for x in range(state.SCREEN_WIDTH):
+        for y in range(state.SCREEN_HEIGHT):
             sdl2.ext.fill(surface, PALETTE[screen[x][y]], area=(x*WINDOW_SCALE, y*WINDOW_SCALE, (x+1)*WINDOW_SCALE, (y+1)*WINDOW_SCALE))
 
 
 def chip8(program):
+    state = chip8_core.State(program)
+
     sdl2.ext.init()
-    window = sdl2.ext.Window("CHIP-8", size=(chip8_core.SCREEN_X*WINDOW_SCALE, chip8_core.SCREEN_Y*WINDOW_SCALE))
+    window = sdl2.ext.Window("CHIP-8", size=(state.SCREEN_WIDTH*WINDOW_SCALE, state.SCREEN_HEIGHT*WINDOW_SCALE))
     window.show()
 
-    renderer = sdl2.ext.Renderer(window, logical_size=(chip8_core.SCREEN_X, chip8_core.SCREEN_Y))
+    renderer = sdl2.ext.Renderer(window, logical_size=(state.SCREEN_WIDTH, state.SCREEN_HEIGHT))
     texture_renderer = sdl2.ext.TextureSpriteRenderSystem(renderer)
     sprite_factory = sdl2.ext.SpriteFactory(renderer=renderer)
-
-    state = chip8_core.State(program)
 
     running = True
 
@@ -70,11 +70,11 @@ def chip8(program):
 
         chip8_core.execute_opcode(state, chip8_core.read_opcode(state))
 
-        flat_screen = [pixel*255 for x in state.screen for pixel in x]
-        im_screen = Image.new('1', (chip8_core.SCREEN_X, chip8_core.SCREEN_Y))
-        im_screen.putdata(flat_screen)
-        bytesio_screen = io.BytesIO(bytearray(len(flat_screen)*2))
+        im_screen = Image.new('1', (state.SCREEN_WIDTH, state.SCREEN_HEIGHT))
+        im_screen.putdata([p * 255 for p in state.screen])
+        bytesio_screen = io.BytesIO()
         im_screen.save(bytesio_screen, format='BMP')
+        bytesio_screen.seek(0)
         texture_screen = sprite_factory.from_object(bytesio_screen)
         texture_renderer.render(texture_screen, x=0, y=0)
 
