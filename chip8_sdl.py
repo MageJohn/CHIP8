@@ -1,8 +1,10 @@
 import time
 import sys
+import io
 
 import sdl2
 import sdl2.ext
+from PIL import Image
 
 
 import chip8_core
@@ -38,9 +40,11 @@ def draw_surface(surface, screen):
 def chip8(program):
     sdl2.ext.init()
     window = sdl2.ext.Window("CHIP-8", size=(chip8_core.SCREEN_X*WINDOW_SCALE, chip8_core.SCREEN_Y*WINDOW_SCALE))
-    surface = window.get_surface()
-    sdl2.ext.fill(surface, PALETTE[0])
     window.show()
+
+    renderer = sdl2.ext.Renderer(window, logical_size=(chip8_core.SCREEN_X, chip8_core.SCREEN_Y))
+    texture_renderer = sdl2.ext.TextureSpriteRenderSystem(renderer)
+    sprite_factory = sdl2.ext.SpriteFactory(renderer=renderer)
 
     state = chip8_core.State(program)
 
@@ -64,11 +68,15 @@ def chip8(program):
                     print('Key Up: {:X}'.format(KEYS.index(key)))
 
 
-
         chip8_core.execute_opcode(state, chip8_core.read_opcode(state))
 
-        draw_surface(surface, state.screen)
-        window.refresh()
+        flat_screen = [pixel*255 for x in state.screen for pixel in x]
+        im_screen = Image.new('1', (chip8_core.SCREEN_X, chip8_core.SCREEN_Y))
+        im_screen.putdata(flat_screen)
+        bytesio_screen = io.BytesIO(bytearray(len(flat_screen)*2))
+        im_screen.save(bytesio_screen, format='BMP')
+        texture_screen = sprite_factory.from_object(bytesio_screen)
+        texture_renderer.render(texture_screen, x=0, y=0)
 
 
         if state.delay > 0:
