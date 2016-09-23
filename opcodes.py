@@ -9,6 +9,7 @@
 import sys
 import random
 
+
 def x0(state, opcode):
     if opcode == 0x00E0:   # 0x00E0 Clears the screen
         state.init_screen()
@@ -17,46 +18,59 @@ def x0(state, opcode):
     else:                  # Ox0NNN Calls RCA 1802 machine code at address NNN. Not supported here
         sys.exit("Execution of machine code is not supported.")
 
+
 def x1NNN(state, opcode):  # 0x1NNN Jump to address NNN.
     state.pc = opcode.NNN
+
 
 def x2NNN(state, opcode):  # 0x2NNN Calls subroutine at address NNN.
     state.stack.append(state.pc)
     state.pc = opcode.NNN
 
+
 def x3XNN(state, opcode):  # 0x3XNN Skips the next instruction if VX equals NN.
     if state.register[opcode.X] == opcode.NN:
         state.pc = (state.pc + 2) % 0x1000
+
 
 def x4XNN(state, opcode):  # 0x4XNN Skips the next instruction if VX doesn't equal NN.
     if state.register[opcode.X] != opcode.NN:
         state.pc = (state.pc + 2) % 0x1000
 
+
 def x5XY0(state, opcode):  # 0x5XY0 Skips the next instruction if VX equals VY.
     if state.register[opcode.X] == state.register[opcode.Y]:
         state.pc = (state.pc + 2) % 0x1000
 
+
 def x6XNN(state, opcode):  # 0x6XNN Sets VX to NN.
     state.register[opcode.X] = opcode.NN
+
 
 def x7XNN(state, opcode):  #  0x7XNN Adds NN to VX.
     state.register[opcode.X] = (state.register[opcode.X] + (opcode.NN)) % 0x100
 
+
 def x8XY0(state, opcode):  # 0x8XY0 Sets VX to the value of VY.
     state.register[opcode.X] = state.register[opcode.Y]
+
 
 def x8XY1(state, opcode):  # 0x8XY1 Sets VX to VX | VY.
     state.register[opcode.X] = state.register[opcode.X] | state.register[opcode.Y]
 
+
 def x8XY2(state, opcode):  # 0x8XY2 Sets VX to VX & VY.
     state.register[opcode.X] = state.register[opcode.X] & state.register[opcode.Y]
+
 
 def x8XY3(state, opcode):  # 0x8XY3 Sets VX to VX ^ VY.
     state.register[opcode.X] = state.register[opcode.X] ^ state.register[opcode.Y]
 
+
 def x8XY4(state, opcode):  # 0x8XY4 Sets VX to VX + VY. VF is set to 1 if there was a carry, 0 if not.
     state.register[0xF] = int(state.register[opcode.X] + state.register[opcode.Y] > 0xFF)
     state.register[opcode.X] = (state.register[opcode.X] + state.register[opcode.Y]) % 0x100
+
 
 def x8XY5(state, opcode):  # 0x8XY5 Sets VX to VX - VY. VF is set to 0 when there's a borrow, 1 when not.
     if state.register[opcode.Y] > state.register[opcode.X]:
@@ -66,9 +80,11 @@ def x8XY5(state, opcode):  # 0x8XY5 Sets VX to VX - VY. VF is set to 0 when ther
         state.register[0xF] = 1
         state.register[opcode.X] -= state.register[opcode.Y]
 
+
 def x8XY6(state, opcode):  # 0x8XY6 Set VX to VY >> 1. Set VF to the least significant bit of VY before the operation.
     state.register[0xF] = state.register[opcode.Y] & 1
     state.register[opcode.X] = state.register[opcode.Y] >> 1
+
 
 def x8XY7(state, opcode):  # 0x8XY7 Set VX to VY - VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
     if state.register[opcode.X] > state.register[opcode.Y]:
@@ -78,9 +94,11 @@ def x8XY7(state, opcode):  # 0x8XY7 Set VX to VY - VX. VF is set to 0 when there
         state.register[0xF] = 1
         state.register[opcode.X] = state.register[opcode.Y] - state.register[opcode.X]
 
+
 def x8XYE(state, opcode):  # 0x8XYE Set VX to VY << 1. Set VF to the most significant bit of VY before the operation.
     state.register[0xF] = state.register[opcode.Y] & 0x80
     state.register[opcode.X] = (state.register[opcode.Y] << 1) & 0xFF
+
 
 def x8(state, opcode):
     mapping = {0x0: x8XY0,
@@ -95,27 +113,23 @@ def x8(state, opcode):
 
     mapping[opcode[3]](state, opcode)
 
+
 def x9XY0(state, opcode):  # 0x9XY0 Skips the next instruction if VX doesn't equal VY
     if state.register[opcode.X] != state.register[opcode.Y]:
         state.pc = (state.pc + 2) % 0x1000
 
+
 def xANNN(state, opcode):  # 0xANNN Sets register I to the address NNN
     state.I = opcode.NNN
+
 
 def xBNNN(state, opcode):  # 0xBNNN Jumps to the address NNN plus V0
     state.I = (opcode.NNN + state.register[0]) % 0x1000
 
+
 def xCXNN(state, opcode):  # 0xCXNN Set VX to a random number with a mask of NN
     state.register[opcode.X] = random.randint(0x00, 0xFF) & opcode.NN
 
-def xDXYN_old(state, opcode):
-    state.register[0xF] = 0
-
-    for y_offset in range(opcode[3]):
-        byte = [int(d) for d in format(state.memory[state.I + y_offset], '08b')]
-        for x_offset, bit in enumerate(byte):
-            state.register[0xF] = state.register[0xF] or state.screen[state.register[opcode.X]+x_offset][state.register[opcode.Y]+y_offset] & bit
-            state.screen[state.register[opcode.X]+x_offset][state.register[opcode.Y]+y_offset] = state.screen[state.register[opcode.X]+x_offset][state.register[opcode.Y]+y_offset] ^ bit
 
 
 def xDXYN(state, opcode):
@@ -129,17 +143,18 @@ def xDXYN(state, opcode):
 
     state.register[0xF] = 0
 
-    max_x = len(state.screen)
-    max_y = len(state.screen[0])
+    width = state.SCREEN_WIDTH
 
     for y in range(len(sprite)):
         for x in range(len(sprite[0])):
             screen_y = state.register[opcode.Y] + y
-            screen_y = screen_y if screen_y < max_y else max_y - 1
             screen_x = state.register[opcode.X] + x
-            screen_x = screen_x if screen_x < max_x else max_x - 1            
-            state.register[0xF] = state.register[0xF] | state.screen[screen_x][screen_y] & sprite[y][x]
-            state.screen[screen_x][screen_y] = state.screen[screen_x][screen_y] ^ sprite[y][x]
+            try:
+                state.register[0xF] = state.register[0xF] or state.screen[screen_y*width + screen_x] & sprite[y][x]
+                state.screen[screen_y*width + screen_x] = state.screen[screen_y*width + screen_x] ^ sprite[y][x]
+            except IndexError:
+                break
+
 
 
 def xE(state, opcode):
@@ -148,8 +163,10 @@ def xE(state, opcode):
     else:                  # 0xEXA1 Skip the following instruction if the key corresponding to the hex value stored in VX is not pressed.
         state.pc = (state.pc + 2 * (not state.keypad[opcode.X])) % 0x1000
 
+
 def xFX07(state, opcode):  # 0xFX07 Store the current value of the delay timer in register VX
     state.register[opcode.X] = state.delay
+
 
 def xFX0A(state, opcode):  # 0xFX0A Wait for a keypress and store the result in register VX
     if 1 in state.keypad:
@@ -157,33 +174,41 @@ def xFX0A(state, opcode):  # 0xFX0A Wait for a keypress and store the result in 
     else:
         state.pc -= 2
 
+
 def xFX15(state, opcode):  # 0xFX15 Set the delay timer to the value of VX
     state.delay = state.register[opcode.X]
 
+
 def xFX18(state, opcode):  # 0xFX18 Set the sound timer to the value of VX
     state.sound = state.register[opcode.X]
+
 
 def xFX1E(state, opcode):  # 0xFX1E Add the value stored in VX to register I
     state.register[0xF] = int(state.I + state.register[opcode.X] > 0xFFF)
     state.I = (state.I + state.register[opcode.X]) % 0x1000
 
+
 def xFX29(state, opcode):  # 0xFX29 Set I to the memory addres of the sprite data corresponding to the hexadecimal digit stored in VX
     state.I = state.register[opcode.X] * 5
+
 
 def xFX33(state, opcode):  # 0xFX33 Store the binary-coded decimal equivalent of the value stored in VX at addresses I, I+1, and I+2
     dec_x = format(state.register[opcode.X], '03d')
     for i in range(3):
         state.memory[state.I + i] = int(dec_x[i])
 
+
 def xFX55(state, opcode):  # 0xFX55 Store the values of registers V0 to VX inclusive in memory starting at address I. I is set to I + X + 1 after the operation.
     for register in range(opcode.X+1):
         state.memory[state.I+register] = state.register[opcode.X]
     state.I = state.I + opcode.X + 1
 
+
 def xFX65(state, opcode): # 0xFX65 Fill registers V0 to VX inclusive with the values stored in memory starting at address I. I is set to I + X + 1 after the operation.
     for register in range(opcode.X+1):
         state.register[register] = state.memory[state.I+register]
     state.I = state.I + opcode.X + 1
+
 
 def xF(state, opcode):
     mapping = {0x07: xFX07,

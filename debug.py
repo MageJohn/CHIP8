@@ -1,15 +1,15 @@
 import chip8_core
 
-def printscreen(screen):
+def printscreen(state):
     '''Utility to print out a screen array such as State.screen'''
-    for y in range(len(screen[0])):
-        for x in range(len(screen)):
-            print('0' if screen[x][y] else '.', end='')
+    for y in range(state.SCREEN_HEIGHT):
+        for x in state.screen[y*state.SCREEN_WIDTH:(y+1)*state.SCREEN_WIDTH]:
+            print('█' if x else '░', end='')
         print()
 
 
 def printstate(state, memslice=None):
-    printscreen(state.screen)
+    printscreen(state)
 
     print("\nRegisters:")
     for i in range(len(state.register)):
@@ -51,4 +51,7 @@ def step(state):
         state.delay -= 1
     if state.sound > 0:
         state.sound -=1
+
+def step_printstate(state):
+    step(state)
     printstate(state)
