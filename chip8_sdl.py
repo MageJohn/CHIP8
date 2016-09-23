@@ -52,10 +52,11 @@ def chip8(program):
     texture_renderer = sdl2.ext.TextureSpriteRenderSystem(renderer)
     sprite_factory = sdl2.ext.SpriteFactory(renderer=renderer)
 
+    countdown = 0
     running = True
 
     while running:
-        t = time.perf_counter()
+        t1 = time.perf_counter()
 
         events = sdl2.ext.get_events()
         for event in events:
@@ -79,15 +80,15 @@ def chip8(program):
         texture = screen_to_texture(state, sprite_factory)
         texture_renderer.render(texture, x=0, y=0)
 
-
-        if state.delay > 0:
-            state.delay -= 1
-        if state.sound > 0:
-            state.sound -= 1
-            # TODO Emit sound while this timer > 0
-
         t2 = time.perf_counter()
-        time.sleep(max(1/60 - (t2 - t), 0))
+
+        countdown += (t2 - t1)
+        if countdown >= 1/60:
+            if state.delay > 0:
+                state.delay -= 1
+            if state.sound > 0:
+                state.sound -= 1
+            countdown = 0
 
 
 if __name__ == '__main__':
