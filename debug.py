@@ -51,4 +51,7 @@ def step(state):
         state.delay -= 1
     if state.sound > 0:
         state.sound -=1
+
+def step_printstate(state):
+    step(state)
     printstate(state)
