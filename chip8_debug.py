@@ -45,14 +45,7 @@ def printstate(state, memslice=None):
         print(format(i, '03X'), end=' ')
     print()
 
-def step(state):
-    if state.delay > 0: 
-        state.delay -= 1
-    if state.sound > 0:
-        state.sound -=1
-    chip8_core.execute_opcode(state, chip8_core.read_opcode(state))
 
-
-def step_printstate(state):
-    step(state)
+def step_printstate(state, interpreter):
+    interpreter.step()
     printstate(state)
