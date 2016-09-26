@@ -4,7 +4,7 @@ import importlib
 
 import chip8_core
 
-platform_layers = {'sdl': 'chip8_sdl'}
+platform_layers = {'sdl': 'platform_sdl'}
 
 platform_layer = 'sdl'
 

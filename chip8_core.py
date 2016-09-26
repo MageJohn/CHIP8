@@ -3,7 +3,7 @@ import sys
 import random
 import sdl2.ext
 
-import opcodes
+import interpreter_opcodes
 
 FONT = (0xF0, 0x90, 0x90, 0x90, 0xF0, # 0
         0x20, 0x60, 0x20, 0x20, 0x70, # 1
@@ -69,7 +69,7 @@ class Interpreter:
         
     def execute_opcode(self, opcode):
         '''Perform the opcode on state.'''
-        opcodes.mapping[opcode[0]](self.state, opcode)
+        interpreter_opcodes.mapping[opcode[0]](self.state, opcode)
 
     def step(self):
         self.execute_opcode(self.read_opcode())
