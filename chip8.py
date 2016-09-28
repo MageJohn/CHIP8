@@ -25,7 +25,7 @@ KEYMAP  = {'0'      :   0, # Number key
            'kp_7'   :   1,
            '2'      :   2,
            'kp_8'   :   2,
-           'up'     :   2,
+           'up'     :   2, # Non-printing key, named in full
            '3'      :   3,
            'kp_9'   :   3,
            '4'      :   4,
@@ -55,7 +55,7 @@ KEYMAP  = {'0'      :   0, # Number key
            'kp_e'   : 0xE,
            'f'      : 0xF,
            'kp_f'   : 0xF,
-           'escape' : 'exit', # Non-printing key
+           'escape' : 'exit',
            'ctrl+q' : 'exit' # Modifier + letter key
            }
 
