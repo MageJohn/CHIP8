@@ -4,14 +4,14 @@ import importlib
 
 import chip8_core
 
-from chip8_input import KEYDOWN, KEYUP, QUIT
+from chip8_input import *
 
 platform_layers = {'sdl': 'platform_sdl'}
 
-platform_layer = 'sdl'
+PLATFORM_LAYER = 'sdl'
 
-if platform_layer in platform_layers.keys():
-    platform_layer = importlib.import_module(platform_layers[platform_layer])
+if PLATFORM_LAYER in platform_layers.keys():
+    platform_layer = importlib.import_module(platform_layers[PLATFORM_LAYER])
 else:
     sys.exit("Unknown platform layer")
 
@@ -58,12 +58,15 @@ KEYMAP  = {'0'      :   0, # Number key
            'escape' : 'exit',
            'ctrl+q' : 'exit' # Modifier + letter key
            }
+           # Other possibilites include multiple modifiers. Modifiers themselves can't be bound directly.
 
 
-def chip8(program):
-    state = chip8_core.State(program)
-    interpreter = chip8_core.Interpreter(state)
+def chip8(program, keymap, state=None):
+    if not state:
+        state = chip8_core.State(program)
+
     platform_interface = platform_layer.Interface(state, PLATFORM_OPTIONS)
+    interpreter = chip8_core.Interpreter()
 
     countdown = 0
     beeping = False
@@ -75,19 +78,22 @@ def chip8(program):
         for event in events:
             if event.type == QUIT:
                 running = False
-            elif event.keycode in KEYMAP.keys():
-                key = KEYMAP[event.keycode]
-                if key == 'exit':
+            elif event.keycode in keymap.keys():
+                action = keymap[event.keycode]
+                if action == 'exit':
                     running = False
+                elif type(action) == int and action < len(state.keypad):
+                    state.keypad[action] = event.type
                 else:
-                    state.keypad[key] = event.type
+                    message = "Unhandled action: {}".format(action)
+                    raise UnhandledActionError(message, action)
         if not running:
             break
 
         delay_was = state.delay
-        interpreter.step()
+        interpreter.step(state)
 
-        platform_interface.video.update_screen()
+        platform_interface.video.update_screen(state)
 
         #### Timer End ####
         t2 = time.perf_counter()
@@ -103,12 +109,12 @@ def chip8(program):
                                          # delay timer starts ticking. Else
                                          # a delay of 1 might not have an
                                          # effect.
-                state.delay -= 1
+                state.delay = max(0, state.delay - 1)
             if state.sound > 0:
                 if not beeping:
                     platform_interface.audio.beep(state.sound * 1/60)
                     beeping = True
-                state.sound -= 1
+                state.sound = max(0, state.sound - 1)
             else:
                 beeping = False
 
@@ -118,4 +124,4 @@ def chip8(program):
 if __name__ == '__main__':
     with open(sys.argv[1], "rb") as binary_file:
         program = binary_file.read()
-        chip8(program)
+    chip8(program, KEYMAP)

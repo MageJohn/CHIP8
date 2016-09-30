@@ -57,22 +57,20 @@ class State:
 
 
 class Interpreter:
-    def __init__(self, state):
-        self.state = state
-
-    def read_opcode(self):
+    def read_opcode(self, state, offset=0, advance=True):
         '''Return the bytes pointed at by state.pc and state.pc + 1. Advance state.pc'''
-        pc = self.state.pc
-        self.state.pc += 2
-        opcode = self.state.memory[pc:pc+2]
+        pc = state.pc + (offset * 2)
+        if advance:
+            state.pc += 2
+        opcode = state.memory[pc:pc+2]
         return Opcode((opcode[0] << 8) + opcode[1])
         
-    def execute_opcode(self, opcode):
+    def execute_opcode(self, opcode, state):
         '''Perform the opcode on state.'''
-        interpreter_opcodes.mapping[opcode[0]](self.state, opcode)
+        interpreter_opcodes.mapping[opcode[0]](state, opcode)
 
-    def step(self):
-        self.execute_opcode(self.read_opcode())
+    def step(self, state):
+        self.execute_opcode(self.read_opcode(state), state)
 
 
 class Opcode(int):

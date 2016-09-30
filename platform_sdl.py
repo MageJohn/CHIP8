@@ -13,7 +13,7 @@ SDL_TO_GENERIC = {sdl2.SDLK_BACKSPACE: "\b",
 sdl2.SDLK_TAB: "\t",
 sdl2.SDLK_RETURN: "\r",
 sdl2.SDLK_ESCAPE: "escape",
-sdl2.SDLK_SPACE: " ",
+sdl2.SDLK_SPACE: "space",
 sdl2.SDLK_EXCLAIM: "!",
 sdl2.SDLK_QUOTEDBL: "\"",
 sdl2.SDLK_HASH: "#",
@@ -218,41 +218,43 @@ class Interface:
         if sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO|sdl2.SDL_INIT_AUDIO) != 0:
             sys.exit("SDL_Init failed: {}".format(sdl2.SDL_GetError()))
 
-        self.state = state
         self.option_dict = option_dict
 
-        self.video = Video(self)
+        self.video = Video(self, state)
         self.input = Input(self)
         self.audio = Audio(self)
 
 
 class Video:
-    def __init__(self, interface):
-        # NOTE: This class wraps SDL2 video.
+    def __init__(self, interface, state):
+        # This class wraps SDL2 video.
         self.interface = interface
 
-        window_scale = self.interface.option_dict['window_scale']
         self.palette = self.interface.option_dict['palette']
+
+        window_scale = self.interface.option_dict['window_scale']
         program_name = self.interface.option_dict['title']
 
-        win_size = (self.interface.state.SCREEN_WIDTH*window_scale, 
-                    self.interface.state.SCREEN_HEIGHT*window_scale)
+        win_size = (state.SCREEN_WIDTH*window_scale, 
+                    state.SCREEN_HEIGHT*window_scale)
+
         self._window = sdl2.ext.Window(program_name, 
                                        size=win_size,
                                        flags=sdl2.SDL_WINDOW_RESIZABLE)
         self._window.show()
 
-        logical_size = (self.interface.state.SCREEN_WIDTH,
-                        self.interface.state.SCREEN_HEIGHT)
+        logical_size = (state.SCREEN_WIDTH,
+                        state.SCREEN_HEIGHT)
+
         self._renderer = sdl2.ext.Renderer(self._window, logical_size=logical_size)
         self._texture_renderer = sdl2.ext.TextureSpriteRenderSystem(self._renderer)
         self._sprite_factory = sdl2.ext.SpriteFactory(renderer=self._renderer)
 
-    def update_screen(self):
+    def update_screen(self, state):
         im_screen = Image.new('RGB', 
-                              (self.interface.state.SCREEN_WIDTH, 
-                               self.interface.state.SCREEN_HEIGHT))
-        im_screen.putdata([self.palette[p] for p in self.interface.state.screen])
+                              (state.SCREEN_WIDTH, 
+                               state.SCREEN_HEIGHT))
+        im_screen.putdata([self.palette[p] for p in state.screen])
         bytesio_screen = io.BytesIO()
         im_screen.save(bytesio_screen, format='BMP')
         bytesio_screen.seek(0)

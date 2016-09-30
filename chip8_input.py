@@ -4,7 +4,7 @@ _KEYS = ("\b",
          "\t",
          "\r",
          "escape",
-         " ",
+         "space",
          "!",
          "\"",
          "#",
@@ -207,8 +207,8 @@ _SYNONYMS = {'control':   'ctrl',
              'gui':       'super',
              'esc':       'escape',
              'del':       'delete',
-             'space':     ' ',
-             'spacebar':  ' ',
+             ' ':         'space',
+             'spacebar':  'space',
              'backspace': '\b',
              'tab':       '\t',
              'return':    '\r',
@@ -232,7 +232,7 @@ replace common synonyms, and reorder the modifiers with sorted()'''
     if len(key_parts) > 0:
 
         if key_parts[-1] in _MODIFIERS:
-            raise _KeyCodeError("Can't bind modifier directly")
+            raise KeyCodeError("Can't bind modifier directly")
 
         if (key_parts[-1].startswith('keypad_') or
             key_parts[-1].startswith('numpad_')):
@@ -247,7 +247,7 @@ replace common synonyms, and reorder the modifiers with sorted()'''
 
             else:
 
-                raise _KeyCodeError('Unknown key: {}'.format(key_parts[-1]))
+                raise KeyCodeError('Unknown key: {}'.format(key_parts[-1]))
 
         if len(key_parts) > 1:
 
@@ -261,7 +261,7 @@ replace common synonyms, and reorder the modifiers with sorted()'''
 
                     else:
 
-                        raise _KeyCodeError('Unknown modifier: {}'.format(m))
+                        raise KeyCodeError('Unknown modifier: {}'.format(m))
 
             sorted_parts = sorted(key_parts[:-1])
             sorted_parts.append(key_parts[-1])
@@ -269,7 +269,7 @@ replace common synonyms, and reorder the modifiers with sorted()'''
 
     else:
 
-        raise _KeyCodeError('Empty key string')
+        raise KeyCodeError('Empty key string')
 
     return '+'.join(key_parts)
 
@@ -278,8 +278,15 @@ replace common synonyms, and reorder the modifiers with sorted()'''
 
 
 
-class _KeyCodeError(Exception):
+class KeyCodeError(Exception):
     def __init__(self, message):
         '''Raised when attempting to process an invalid keycode'''
         self.message = message
+
+class UnhandledActionError(Exception):
+    '''Raised when a keymap dictionary returns an unhandled action string'''
+    def __init__(self, message, action):
+        self.message = message
+        self.action = action
+
 
