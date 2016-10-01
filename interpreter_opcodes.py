@@ -223,6 +223,7 @@ def xF(state, opcode):
                0x65: xFX65}
     mapping[opcode[2:]](state, opcode)
 
+
 mapping = {0x0: x0,
            0x1: x1NNN,
            0x2: x2NNN,
@@ -239,3 +240,4 @@ mapping = {0x0: x0,
            0xD: xDXYN,
            0xE: xE,
            0xF: xF}
+

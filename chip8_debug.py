@@ -5,51 +5,6 @@ import chip8_core
 import platform_sdl
 import chip8_input
 
-PLATFORM_OPTIONS = {'window_scale': 16,
-                    'palette': ((0,0,0), (255,255,255)),
-                    'title': 'CHIP8'}
-
-DEBUG_KEYMAP  = {'0'      :   0,
-                 'kp_0'   :   0,
-                 '1'      :   1,
-                 'kp_7'   :   1,
-                 '2'      :   2,
-                 'kp_8'   :   2,
-                 'up'     :   2,
-                 '3'      :   3,
-                 'kp_9'   :   3,
-                 '4'      :   4,
-                 'kp_4'   :   4,
-                 'left'   :   4,
-                 '5'      :   5,
-                 'kp_5'   :   5,
-                 '6'      :   6,
-                 'kp_6'   :   6,
-                 'right'  :   6,
-                 '7'      :   7,
-                 'kp_1'   :   7,
-                 '8'      :   8,
-                 'kp_2'   :   8,
-                 'down'   :   8,
-                 '9'      :   9,
-                 'kp_3'   :   9,
-                 'a'      : 0xA,
-                 'kp_a'   : 0xA,
-                 'b'      : 0xB,
-                 'kp_b'   : 0xB,
-                 'c'      : 0xC,
-                 'kp_c'   : 0xC,
-                 'd'      : 0xD,
-                 'kp_d'   : 0xD,
-                 'e'      : 0xE,
-                 'kp_e'   : 0xE,
-                 'f'      : 0xF,
-                 'kp_f'   : 0xF,
-                 'escape' : 'exit',
-                 'ctrl+q' : 'exit',
-                 'ctrl+b' : 'break',
-                }
-
 
 def print_screen(state):
     '''Utility to print out a screen array such as State.screen'''
@@ -62,6 +17,7 @@ def print_screen(state):
 def print_state(state, interpreter):
     '''Format and print the data in a chip8_core.State object.'''
     keys_on_off = ' '.join([format(i, 'X') if state.keypad[i] else ' ' for i in range(16)])
+    current_opcode = interpreter.read_opcode(state, advance=False)
     print('''
 Registers
 V0 V1 V2 V3 V4 V5 V6 V7 V8 V9 VA VB VC VD VE VF
@@ -74,15 +30,17 @@ Pressed keys: {1}
 I   pc  delay sound
 {2:03X} {3:03X} {4:02X}    {5:02X}
 
-Last opcode  Current opcode
-0x{6:04X}       0x{7:04X}
+Current opcode
+0x{6:04X}
+
+{7}
 
 Stack
 '''.format(state.register, 
            keys_on_off,
            state.I, state.pc, state.delay, state.sound,
-           interpreter.read_opcode(state, offset=(-1), advance=False),
-           interpreter.read_opcode(state, advance=False)))
+           current_opcode,
+           chip8_core.doc(current_opcode)))
     for i in state.stack:
         print(format(i, '03X'))
 
