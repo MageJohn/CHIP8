@@ -1,9 +1,16 @@
+'''This file is just for my own debugging purposes. It's very hacky, 
+and is intended to minimise the typing necassary to use the codebase
+from the interactive shell, nothing more.'''
+
+
 import time
 
 import chip8
 import chip8_core
 import platform_sdl
 import chip8_input
+
+interpreter = chip8_core.Interpreter()
 
 
 def print_screen(state):
@@ -14,7 +21,7 @@ def print_screen(state):
         print()
 
 
-def print_state(state, interpreter):
+def print_state(state):
     '''Format and print the data in a chip8_core.State object.'''
     keys_on_off = ' '.join([format(i, 'X') if state.keypad[i] else ' ' for i in range(16)])
     current_opcode = interpreter.read_opcode(state, advance=False)
@@ -45,17 +52,25 @@ Stack
         print(format(i, '03X'))
 
 
-def print_screen_state(state, interpreter):
+def print_screen_state(state):
     print_screen(state)
-    print_state(state, interpreter)
+    print_state(state)
 
 
-def step_print_screen_state(state, interpreter):
+def step_print_screen_state(state):
     interpreter.step(state)
-    print_screen_state(state, interpreter)
+    print_screen_state(state)
 
 
 def debug_sdl(state):
     chip8.chip8(None, chip8.KEYMAP, state)
     platform_sdl.sdl2.SDL_Quit()
 
+
+def init(filename):
+    with open(filename, 'rb') as binary_file:
+        program = binary_file.read()
+
+    state = chip8_core.State(program)
+
+    return state
