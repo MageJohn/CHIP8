@@ -201,7 +201,7 @@ def xFX33(state, opcode):  # 0xFX33 Store the binary-coded decimal equivalent of
 
 def xFX55(state, opcode):  # 0xFX55 Store the values of registers V0 to VX inclusive in memory starting at address I. I is set to I + X + 1 after the operation.
     for register in range(opcode.X+1):
-        state.memory[state.I+register] = state.register[opcode.X]
+        state.memory[state.I+register] = state.register[register]
     state.I = state.I + opcode.X + 1
 
 
