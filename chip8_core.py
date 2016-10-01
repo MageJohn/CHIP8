@@ -80,14 +80,14 @@ class Opcode(int):
         new_instance.Y = (value & 0x00F0) >> 4
         new_instance.NN = value & 0x00FF
         new_instance.NNN = value & 0x0FFF
-        new_instance.__hex__ = format(value, '04X')
+        new_instance._hex = format(value, '04X')
         return new_instance
 
     def __repr__(self):
-        return '0x' + self.__hex__
+        return '0x' + self._hex
 
     def __getitem__(self, value):
-        return int(self.__hex__[value], base=16)
+        return int(self._hex[value], base=16)
 
 
 def doc(opcode):
