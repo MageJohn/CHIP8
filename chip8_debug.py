@@ -2,19 +2,16 @@
 `from chip8_debug import *` to set up the interpreter with everything
 needed to interact with the codebase.'''
 
-
-import time
-import sys
 import tempfile
 import os
 
 from subprocess import call
 
 import chip8
-import chip8_core
 import chip8_input
+import chip8_state
+import chip8_interpreter
 import platform_sdl
-import interpreter_opcodes
 
 
 def print_screen(state):
@@ -38,9 +35,9 @@ state.memory'''
 
 
 def print_state(state):
-    '''Format and print the data in a chip8_core.State object.'''
+    '''Format and print the data in a chip8_state.State object.'''
     keys_on_off = ' '.join([format(i, 'X') if state.keypad[i] else ' ' for i in range(16)])
-    current_opcode = interpreter.read_opcode(state, advance=False)
+    current_opcode = chip8_interpreter.read_opcode(state, advance=False)
     print('''
 Registers
 V0 V1 V2 V3 V4 V5 V6 V7 V8 V9 VA VB VC VD VE VF
@@ -74,17 +71,17 @@ def print_screen_state(state):
 
 
 def step_print_screen_state(state):
-    interpreter.step(state)
+    chip8_interpreter.step(state)
     print_screen_state(state)
 
 
 def step_out(state, handle_delay=True):
     '''Run until a return command is executed.'''
-    while interpreter.read_opcode(state, advance=False) != 0x00EE:
-        interpreter.step(state)
+    while chip8_interpreter.read_opcode(state, advance=False) != 0x00EE:
+        chip8_interpreter.step(state)
         if handle_delay:
             state.delay = 0
-    interpreter.step(state)
+    chip8_interpreter.step(state)
 
 
 def debug_sdl(state):
@@ -97,7 +94,7 @@ def memslice(state, start, stop):
     print('[', end='')
     for i in state.memory[start:stop-1]:
         print('0x{:02X}'.format(i), end=', ')
-    print('0x{:02X}]'.format(i))
+    print('0x{:02X}]'.format(state.memory[stop-1]))
 
 
 def init_state(filename):
@@ -105,7 +102,7 @@ def init_state(filename):
     with open(filename, 'rb') as binary_file:
         program = binary_file.read()
 
-    state = chip8_core.State(program)
+    state = chip8_state.State(program)
 
     return state
 
@@ -168,7 +165,7 @@ a note set for opcode, that is included.'''
             l_opcode[3] = 'X'
             string = self.docstrings[''.join(l_opcode)]
         else:
-            string = self.docstrings['0' + chip8_core.interpreter_opcodes.mapping[opcode[0]].__name__]
+            string = self.docstrings['0' + chip8_interpreter.MAPPING[opcode[0]].__name__]
 
         try:
             string = string + '\n\nNote: ' + self._notes[opcode]
@@ -203,16 +200,17 @@ set, nano is used.'''
         
 
     def _normalize_opcode(self, opcode):
-    '''
-Convert opcodes in string and integer forms into an Opcode object'''
+        '''Convert opcodes in string and integer
+forms into an Opcode object'''
         if type(opcode) == int:
-            opcode = chip8_core.Opcode(opcode)
+            opcode = chip8_interpreter.Opcode(opcode)
         elif type(opcode) == str:
-            opcode = chip8_core.Opcode(int(opcode, 16))
+            opcode = chip8_interpreter.Opcode(int(opcode, 16))
         return opcode
 
 # If debugging a particular file, save typing by setting it here.
-FILENAME = '/path/to/file.ch8'
+FILENAME = '/home/yuri/Downloads/Chip-8 Pack/Chip-8 Games/Landing.ch8'
+
 state = init_state(FILENAME)
-interpreter = chip8_core.Interpreter()
 descriptions = Descriptions()
+note = descriptions.annotate

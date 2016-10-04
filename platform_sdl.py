@@ -6,8 +6,7 @@ import sdl2
 import sdl2.ext
 from PIL import Image
 
-
-from chip8_input import *
+import chip8_input
 
 SDL_TO_GENERIC = {sdl2.SDLK_BACKSPACE: "\b",
 sdl2.SDLK_TAB: "\t",
@@ -47,7 +46,7 @@ sdl2.SDLK_GREATER: ">",
 sdl2.SDLK_QUESTION: "?",
 sdl2.SDLK_AT: "@",
 sdl2.SDLK_LEFTBRACKET: "[",
-sdl2.SDLK_BACKSLASH: "backslash",
+sdl2.SDLK_BACKSLASH: "\\",
 sdl2.SDLK_RIGHTBRACKET: "]",
 sdl2.SDLK_CARET: "^",
 sdl2.SDLK_UNDERSCORE: "_",
@@ -274,20 +273,20 @@ class Input:
         generic_events = []
         for event in sdl2_events:
             if event.type == sdl2.SDL_QUIT:
-                generic_events.append(Event(QUIT, ''))
+                generic_events.append(chip8_input.Event(chip8_input.QUIT, ''))
                 return generic_events
             elif event.type == sdl2.SDL_KEYDOWN:
                 key = event.key.keysym.sym
                 if key in SDL_TO_GENERIC.keys():
-                    keycode = normalize_keycode(self._modstate() +
+                    keycode = chip8_input.normalize_keycode(self._modstate() +
                                                 SDL_TO_GENERIC[key])
-                    generic_events.append(Event(KEYDOWN, keycode))
+                    generic_events.append(chip8_input.Event(chip8_input.KEYDOWN, keycode))
             elif event.type == sdl2.SDL_KEYUP:
                 key = event.key.keysym.sym
                 if key in SDL_TO_GENERIC.keys():
-                    keycode = normalize_keycode(self._modstate() +
+                    keycode = chip8_input.normalize_keycode(self._modstate() +
                                                 SDL_TO_GENERIC[key])
-                    generic_events.append(Event(KEYUP, keycode))
+                    generic_events.append(chip8_input.Event(chip8_input.KEYUP, keycode))
                                           
         return tuple(generic_events)
 

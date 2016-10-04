@@ -222,8 +222,7 @@ def xF(state, opcode):
                0x65: xFX65}
     mapping[opcode[2:]](state, opcode)
 
-
-mapping = {0x0: x0,
+MAPPING = {0x0: x0,
            0x1: x1NNN,
            0x2: x2NNN,
            0x3: x3XNN,
@@ -239,4 +238,54 @@ mapping = {0x0: x0,
            0xD: xDXYN,
            0xE: xE,
            0xF: xF}
+
+
+def read_opcode(state, offset=0, advance=True):
+    '''
+read_opcode(state, offset=0, advance=True)
+Return an Opcode object representing the two bytes in state.memory at state.pc
+    
+offset: Default = 0. Opcodes are 2 bytes long, so this is multiplied by 2 and
+        then added to state.pc
+
+advance: Default = True
+'''
+    pc = state.pc + (offset * 2)
+    if advance:
+        state.pc += 2
+    opcode = state.memory[pc:pc+2]
+    return Opcode((opcode[0] << 8) + opcode[1])
+    
+def execute_opcode(state, opcode):
+    '''Perform the opcode on state.'''
+    MAPPING[opcode[0]](state, opcode)
+
+def step(state):
+    '''Read and execute the next opcode.'''
+    execute_opcode(state, read_opcode(state))
+
+
+class Opcode(int):
+    '''A subclass of int, which can be subscripted to get individual
+hex digits.
+It has the following attributes:
+
+Opcode.X: The second hex digit, always the opcode's X variable, if used.
+Opcode.Y: The third hex digit, always the opcode's Y variable, if used.
+Opcode.NN: The last two hex digits, a constant if the opcode uses it.
+Opcode.NNN: The last three hex digits, an address if the opcode uses it.'''
+    def __new__(cls, value):
+        new_instance = int.__new__(cls, value)
+        new_instance.X = (value & 0x0F00) >> 8
+        new_instance.Y = (value & 0x00F0) >> 4
+        new_instance.NN = value & 0x00FF
+        new_instance.NNN = value & 0x0FFF
+        new_instance._hex = format(value, '04X')
+        return new_instance
+
+    def __repr__(self):
+        return '0x' + self._hex
+
+    def __getitem__(self, value):
+        return int(self._hex[value], base=16)
 

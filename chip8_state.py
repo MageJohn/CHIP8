@@ -1,10 +1,3 @@
-#!/usr/bin/python3
-import sys
-import random
-import sdl2.ext
-
-import interpreter_opcodes
-
 FONT = (0xF0, 0x90, 0x90, 0x90, 0xF0, # 0
         0x20, 0x60, 0x20, 0x20, 0x70, # 1
         0xF0, 0x10, 0xF0, 0x80, 0xF0, # 2
@@ -48,43 +41,5 @@ class State:
         self.load_data(program, 0x200)
         self.load_data(FONT, 0)
 
-    def init_state(self, program):
-        self.init_memory(program)
-        self.state.pc = 0x200
-
     def init_screen(self):
         self.screen = [0x00]*self.SCREEN_HEIGHT*self.SCREEN_WIDTH
-
-
-class Interpreter:
-    def read_opcode(self, state, offset=0, advance=True):
-        '''Return the bytes pointed at by state.pc and state.pc + 1. Advance state.pc'''
-        pc = state.pc + (offset * 2)
-        if advance:
-            state.pc += 2
-        opcode = state.memory[pc:pc+2]
-        return Opcode((opcode[0] << 8) + opcode[1])
-        
-    def execute_opcode(self, opcode, state):
-        '''Perform the opcode on state.'''
-        interpreter_opcodes.mapping[opcode[0]](state, opcode)
-
-    def step(self, state):
-        self.execute_opcode(self.read_opcode(state), state)
-
-
-class Opcode(int):
-    def __new__(cls, value):
-        new_instance = int.__new__(cls, value)
-        new_instance.X = (value & 0x0F00) >> 8
-        new_instance.Y = (value & 0x00F0) >> 4
-        new_instance.NN = value & 0x00FF
-        new_instance.NNN = value & 0x0FFF
-        new_instance._hex = format(value, '04X')
-        return new_instance
-
-    def __repr__(self):
-        return '0x' + self._hex
-
-    def __getitem__(self, value):
-        return int(self._hex[value], base=16)

@@ -2,9 +2,11 @@ import time
 import sys
 import importlib
 
-import chip8_core
+import chip8_state
+import chip8_interpreter
+import chip8_input
 
-from chip8_input import *
+# NOTE: These constants will be moved to a configuration file at some point
 
 platform_layers = {'sdl': 'platform_sdl'}
 
@@ -63,10 +65,9 @@ KEYMAP  = {'0'      :   0, # Number key
 
 def chip8(program, keymap, state=None):
     if not state:
-        state = chip8_core.State(program)
+        state = chip8_state.State(program)
 
     platform_interface = platform_layer.Interface(state, PLATFORM_OPTIONS)
-    interpreter = chip8_core.Interpreter()
 
     countdown = 0
     beeping = False
@@ -76,22 +77,23 @@ def chip8(program, keymap, state=None):
     while running:
         events = platform_interface.input.get_events()
         for event in events:
-            if event.type == QUIT:
+            if event.type == chip8_input.QUIT:
                 running = False
             elif event.keycode in keymap.keys():
                 action = keymap[event.keycode]
                 if action == 'exit':
                     running = False
-                elif type(action) == int and action < len(state.keypad):
+                elif (type(action) == int and 
+                      action in range(len(state.keypad))):
                     state.keypad[action] = event.type
                 else:
                     message = "Unhandled action: {}".format(action)
-                    raise UnhandledActionError(message, action)
+                    raise chip8_input.UnhandledActionError(message, action)
         if not running:
             break
 
         delay_was = state.delay
-        interpreter.step(state)
+        chip8_interpreter.step(state)
 
         platform_interface.video.update_screen(state)
 
@@ -114,7 +116,7 @@ def chip8(program, keymap, state=None):
                 if not beeping:
                     platform_interface.audio.beep(state.sound * 1/60)
                     beeping = True
-                state.sound = max(0, state.sound - 1)
+                state.sound -= 1
             else:
                 beeping = False
 

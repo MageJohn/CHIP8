@@ -212,7 +212,8 @@ _SYNONYMS = {'control':   'ctrl',
              'backspace': '\b',
              'tab':       '\t',
              'return':    '\r',
-             'enter':     '\r'}
+             'enter':     '\r',
+             'backslash': '\\'}
 
 KEYDOWN = 1
 KEYUP = 0
@@ -222,10 +223,9 @@ QUIT = -1
 Event = namedtuple('Event', ('type', 'keycode'))
 
 
-
 def normalize_keycode(keycode):
-    '''Try to normalize key strings. Makes the key string lowercase, \
-replace common synonyms, and reorder the modifiers with sorted()'''
+    '''Try to normalize key strings. Makes the key string lowercase,
+replace common synonyms, and reorders the modifiers with sorted()'''
     keycode = keycode.lower()
     key_parts = keycode.split('+')
 
@@ -274,13 +274,9 @@ replace common synonyms, and reorder the modifiers with sorted()'''
     return '+'.join(key_parts)
 
 
-
-
-
-
 class KeyCodeError(Exception):
+    '''Raised when attempting to process an invalid keycode'''
     def __init__(self, message):
-        '''Raised when attempting to process an invalid keycode'''
         self.message = message
 
 class UnhandledActionError(Exception):
