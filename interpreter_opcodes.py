@@ -75,10 +75,9 @@ def x8XY4(state, opcode):  # 0x8XY4 Sets VX to VX + VY. VF is set to 1 if there 
 def x8XY5(state, opcode):  # 0x8XY5 Sets VX to VX - VY. VF is set to 0 when there's a borrow, 1 when not.
     if state.register[opcode.Y] > state.register[opcode.X]:
         state.register[0xF] = 0
-        state.register[opcode.X] = 0
     else:
         state.register[0xF] = 1
-        state.register[opcode.X] -= state.register[opcode.Y]
+    state.register[opcode.X] = (state.register[opcode.X] - state.register[opcode.Y]) % 0x100
 
 
 def x8XY6(state, opcode):  # 0x8XY6 Set VX to VY >> 1. Set VF to the least significant bit of VY before the operation.
@@ -96,7 +95,7 @@ def x8XY7(state, opcode):  # 0x8XY7 Set VX to VY - VX. VF is set to 0 when there
 
 
 def x8XYE(state, opcode):  # 0x8XYE Set VX to VY << 1. Set VF to the most significant bit of VY before the operation.
-    state.register[0xF] = state.register[opcode.X] & 0x80
+    state.register[0xF] = state.register[opcode.X] >> 7
     state.register[opcode.X] = (state.register[opcode.X] << 1) & 0xFF
 
 
