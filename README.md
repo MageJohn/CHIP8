@@ -11,7 +11,7 @@ To use it make sure you have SDL2, PySDL2, and PIL installed, in addition to Pyt
 
 ## Input ##
 The original computers that ran this had only hex keypads, layed out like this:
-
+```
 +---+---+---+---+
 | 1 | 2 | 3 | C |
 +---+---+---+---+
@@ -21,6 +21,7 @@ The original computers that ran this had only hex keypads, layed out like this:
 +---+---+---+---+
 | A | 0 | B | F |
 +---+---+---+---+
+```
 
 Most games used 2, 4, 6, and 8 for up, left, right and down input. The default keymap for the interpreter flips the physical number keys of a modern keypad vertically, so the directions are correct when you press a key, rather than the numbers being correct. You can also use the arrow keys, if you want. The keys A-F on the keyboard do the duty of the hex pad ones.
 You can adjust the key layout to your liking by going to chip8.py and editing the KEYMAP dict, starting on line 22. 
