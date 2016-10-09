@@ -6,6 +6,7 @@ import tempfile
 import os
 
 from subprocess import call
+from types import SimpleNamespace as DummyState
 
 import chip8
 import chip8_input
