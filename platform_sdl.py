@@ -1,6 +1,9 @@
 import time
 import sys
 import io
+import ctypes
+
+from math import sin, pi
 
 import sdl2
 import sdl2.ext
@@ -220,19 +223,18 @@ class Interface:
         self.option_dict = option_dict
 
         self.video = Video(self, state)
-        self.input = Input(self)
+        self.input = Input()
         self.audio = Audio(self)
 
 
 class Video:
     def __init__(self, interface, state):
         # This class wraps SDL2 video.
-        self.interface = interface
+        options = interface.option_dict['window']
+        self.palette = options['palette']
 
-        self.palette = self.interface.option_dict['palette']
-
-        window_scale = self.interface.option_dict['window_scale']
-        program_name = self.interface.option_dict['title']
+        window_scale = options['window_scale']
+        program_name = options['title']
 
         win_size = (state.SCREEN_WIDTH*window_scale, 
                     state.SCREEN_HEIGHT*window_scale)
@@ -264,10 +266,6 @@ class Video:
 
 
 class Input:
-    def __init__(self, interface):
-        self.interface = interface
-
-
     def get_events(self):
         sdl2_events = sdl2.ext.get_events()
         generic_events = []
@@ -297,8 +295,65 @@ class Input:
             string.append(SDL_KMOD_TO_MOD[modstate & k])
         return ''.join(string)
 
+
 class Audio:
     def __init__(self, interface):
-        pass
+        self._samples_left = 0
+        samples_per_second = 44100
+
+        options = interface.option_dict['sound']
+        self._amplitude = int(options['volume'] * 127)
+        self._tonehz = options['tonehz']
+
+        if options['wavetype'] == 'square':
+            self._phase = 0
+            self._running_sample_index = 0
+            square_wave_period = samples_per_second / self._tonehz
+            self._half_square_wave_period = int(square_wave_period / 2)
+
+            self._generate_sample = self._generate_square
+        elif options['wavetype'] == 'sine':
+            self._v = 0
+            self._generate_sample = self._generate_sine
+
+        audio_callback = sdl2.SDL_AudioCallback(self._callback)
+        self._spec = sdl2.SDL_AudioSpec(freq=samples_per_second,
+                                        aformat=sdl2.AUDIO_S8,
+                                        channels=1,
+                                        samples=256,
+                                        callback=audio_callback)
+
+        self._devid = sdl2.SDL_OpenAudioDevice(None, 0, self._spec, self._spec, 0)
+        sdl2.SDL_PauseAudioDevice(self._devid, 0)
+
+
+    def _generate_sine(self):
+        sample = int(self._amplitude * 
+                     sin(self._v * 2 * pi / self._spec.freq))
+        self._v += self._tonehz
+        return sample
+
+
+    def _generate_square(self):
+        self._running_sample_index += 1
+        if self._running_sample_index % self._half_square_wave_period == 0:
+            self._phase += 1
+        sample = self._amplitude  if self._phase % 2 else -self._amplitude
+        return sample
+
+
+    def _callback(self, notused, stream, length):
+        for i in range(length):
+            if self._samples_left > 0:
+                sample = self._generate_sample()
+                stream[i] = ctypes.c_ubyte(sample)
+                self._samples_left -= 1
+            else:
+                stream[i] = ctypes.c_ubyte(0)
+
+
     def beep(self, length):
-        pass
+        '''Beep for length milliseconds'''
+        sdl2.SDL_LockAudioDevice(self._devid)
+        self._samples_left += int(self._spec.freq / 1000 * length)
+        sdl2.SDL_UnlockAudioDevice(self._devid)

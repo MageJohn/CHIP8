@@ -17,9 +17,17 @@ if PLATFORM_LAYER in platform_layers.keys():
 else:
     sys.exit("Unknown platform layer")
 
-PLATFORM_OPTIONS = {'window_scale': 16,
-                    'palette': ((0,0,0), (255,255,255)),
-                    'title': 'CHIP8'}
+PLATFORM_OPTIONS = {'window': {
+                               'window_scale': 16,
+                               'palette'     : ((0,0,0), (255,255,255)),
+                               'title'       : 'CHIP8'
+                              },
+                    'sound':  {
+                               'volume'      : .5, # in percent
+                               'tonehz'      : 440, # Note A4
+                               'wavetype'    : 'sine' # sine or square
+                              }
+                   }
 
 KEYMAP  = {'0'      :   0, # Number key
            'kp_0'   :   0, # Keypad number key
@@ -114,7 +122,7 @@ def chip8(program, keymap, state=None):
                 state.delay = max(0, state.delay - 1)
             if state.sound > 0:
                 if not beeping:
-                    platform_interface.audio.beep(state.sound * 1/60)
+                    platform_interface.audio.beep(state.sound * 1000/60)
                     beeping = True
                 state.sound -= 1
             else:
